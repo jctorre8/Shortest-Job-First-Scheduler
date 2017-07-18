@@ -21,6 +21,7 @@ typedef struct Process {
 ////////////////////////////////////////////////////////////////////////////////
 //FORWARD DECLARATIONS
 void shortest_job_first(Process * processes[], int ticks, int n_processes);
+void reset_processes(Process * processes[], int n_processes);
 void shortest_job_first_live(Process * processes[], int ticks, int n_processes);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -52,7 +53,7 @@ int main(){
   fclose (file);
 
   shortest_job_first(processes, ticks, proc);
-
+  reset_processes(processes, proc);
   shortest_job_first_live(processes, ticks, proc);
 
   for(i = 0; i < proc; i++){    
@@ -94,6 +95,21 @@ void shortest_job_first(Process * processes[], int ticks, int n_processes){
   printf("Waiting time: %d \n\n", wait);
 }
 
+void reset_processes(Process * processes[], int n_processes){
+  int i, j;
+
+  for(i = 0; i < n_processes; i++){
+    for(j = i+1; j < n_processes; j++){
+      if(processes[j]->number < processes[i]->number){
+        Process * temp;
+        temp = processes[i];
+        processes[i] = processes[j];
+        processes[j] = temp;
+      }
+    }
+  }
+
+}
 
 void shortest_job_first_live(Process * processes[], int ticks, int n_processes){
   int i, j, k, wait = 0, time = 0, error = 0;
@@ -125,7 +141,7 @@ void shortest_job_first_live(Process * processes[], int ticks, int n_processes){
           processes[j]->tau =  (((1 - processes[j]->alpha)*processes[j]->tau) + 
             (processes[j]->alpha*processes[j]->times[i]));
 
-          if(i != n_processes -1)
+          if(j != n_processes -1)
           	wait += processes[j]->times[i];
   		
       }
@@ -135,3 +151,4 @@ void shortest_job_first_live(Process * processes[], int ticks, int n_processes){
   printf("Estimation Error: %d \n\n", error);
   
 }
+
