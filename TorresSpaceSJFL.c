@@ -23,6 +23,12 @@ typedef struct Process {
 void shortest_job_first(Process * processes[], int ticks, int n_processes);
 void reset_processes(Process * processes[], int n_processes);
 void shortest_job_first_live(Process * processes[], int ticks, int n_processes);
+void merge_time(Process * arr[], int l, int m, int r, int index);
+void merge_sort_time(Process * arr[], int l, int r, int index);
+void merge_tau(Process * arr[], int l, int m, int r);
+void merge_sort_tau(Process * arr[], int l, int r);
+void merge_process_number(Process * arr[], int l, int m, int r);
+void merge_sort_process_number(Process * arr[], int l, int r);
 
 ////////////////////////////////////////////////////////////////////////////////
 //Main Entry Point
@@ -70,16 +76,8 @@ void shortest_job_first(Process * processes[], int ticks, int n_processes){
 
   for(i = 0; i < ticks; i++){
   	printf("Simulating the %dth round of processes @ time %d: \n", i, time);
-  	for(j = 0; j < n_processes; j++){        
-       	for(k = j+1; k < n_processes; k++){
-           	if(processes[k]->times[i] < processes[j]->times[i]){
-              Process * temp;
-           		temp = processes[j];
-      				processes[j] = processes[k];
-      				processes[k] = temp;
-    		    }
-        }
-    }
+  	
+    merge_sort_time(processes, 0, n_processes-1, i);
 
     for(j = 0; j < n_processes; j++){
         printf("    Process %d took %d.\n", processes[j]->number, processes[j]->times[i]); 	
@@ -96,19 +94,7 @@ void shortest_job_first(Process * processes[], int ticks, int n_processes){
 }
 
 void reset_processes(Process * processes[], int n_processes){
-  int i, j;
-
-  for(i = 0; i < n_processes; i++){
-    for(j = i+1; j < n_processes; j++){
-      if(processes[j]->number < processes[i]->number){
-        Process * temp;
-        temp = processes[i];
-        processes[i] = processes[j];
-        processes[j] = temp;
-      }
-    }
-  }
-
+  merge_sort_process_number(processes,0,n_processes-1);
 }
 
 void shortest_job_first_live(Process * processes[], int ticks, int n_processes){
@@ -118,17 +104,8 @@ void shortest_job_first_live(Process * processes[], int ticks, int n_processes){
 
   for(i = 0; i < ticks; i++){
       printf("Simulating the %dth round of processes @ time %d: \n", i, time);
-      for(j = 0; j < n_processes; j++){        
-          for(k = j+1; k < n_processes; k++){
-             	if(processes[k]->tau < processes[j]->tau){
-                Process * temp;
-                temp = processes[j];
-                processes[j] = processes[k];
-                processes[k] = temp;
-              }
-          }
-      }
-  
+      
+      merge_sort_tau(processes, 0, n_processes-1);  
 
       for(j = 0; j < n_processes; j++){
           
@@ -152,3 +129,218 @@ void shortest_job_first_live(Process * processes[], int ticks, int n_processes){
   
 }
 
+// Merges two subarrays of arr[].
+// First subarray is arr[l..m]
+// Second subarray is arr[m+1..r]
+void merge_time(Process * arr[], int l, int m, int r, int index){
+    int i, j, k;
+    int n1 = m - l + 1;
+    int n2 =  r - m;
+ 
+    /* create temp arrays */
+    Process * L[n1], * R[n2];
+ 
+    /* Copy data to temp arrays L[] and R[] */
+    for (i = 0; i < n1; i++)
+        L[i] = arr[l + i];
+    for (j = 0; j < n2; j++)
+        R[j] = arr[m + 1+ j];
+ 
+    /* Merge the temp arrays back into arr[l..r]*/
+    i = 0; // Initial index of first subarray
+    j = 0; // Initial index of second subarray
+    k = l; // Initial index of merged subarray
+    while (i < n1 && j < n2)
+    {
+        if (L[i]->times[index] <= R[j]->times[index])
+        {
+            arr[k] = L[i];
+            i++;
+        }
+        else
+        {
+            arr[k] = R[j];
+            j++;
+        }
+        k++;
+    }
+ 
+    /* Copy the remaining elements of L[], if there
+       are any */
+    while (i < n1)
+    {
+        arr[k] = L[i];
+        i++;
+        k++;
+    }
+ 
+    /* Copy the remaining elements of R[], if there
+       are any */
+    while (j < n2)
+    {
+        arr[k] = R[j];
+        j++;
+        k++;
+    }
+}
+ 
+/* l is for left index and r is right index of the
+   sub-array of arr to be sorted */
+void merge_sort_time(Process * arr[], int l, int r, int index){
+    if (l < r)
+    {
+        // Same as (l+r)/2, but avoids overflow for
+        // large l and h
+        int m = l+(r-l)/2;
+ 
+        // Sort first and second halves
+        merge_sort_time(arr, l, m, index);
+        merge_sort_time(arr, m+1, r, index);
+ 
+        merge_time(arr, l, m, r, index);
+    }
+}
+
+// Merges two subarrays of arr[].
+// First subarray is arr[l..m]
+// Second subarray is arr[m+1..r]
+void merge_tau(Process * arr[], int l, int m, int r){
+    int i, j, k;
+    int n1 = m - l + 1;
+    int n2 =  r - m;
+ 
+    /* create temp arrays */
+    Process * L[n1], * R[n2];
+ 
+    /* Copy data to temp arrays L[] and R[] */
+    for (i = 0; i < n1; i++)
+        L[i] = arr[l + i];
+    for (j = 0; j < n2; j++)
+        R[j] = arr[m + 1+ j];
+ 
+    /* Merge the temp arrays back into arr[l..r]*/
+    i = 0; // Initial index of first subarray
+    j = 0; // Initial index of second subarray
+    k = l; // Initial index of merged subarray
+    while (i < n1 && j < n2)
+    {
+        if (L[i]->tau <= R[j]->tau)
+        {
+            arr[k] = L[i];
+            i++;
+        }
+        else
+        {
+            arr[k] = R[j];
+            j++;
+        }
+        k++;
+    }
+ 
+    /* Copy the remaining elements of L[], if there
+       are any */
+    while (i < n1)
+    {
+        arr[k] = L[i];
+        i++;
+        k++;
+    }
+ 
+    /* Copy the remaining elements of R[], if there
+       are any */
+    while (j < n2)
+    {
+        arr[k] = R[j];
+        j++;
+        k++;
+    }
+}
+ 
+/* l is for left index and r is right index of the
+   sub-array of arr to be sorted */
+void merge_sort_tau(Process * arr[], int l, int r){
+    if (l < r)
+    {
+        // Same as (l+r)/2, but avoids overflow for
+        // large l and h
+        int m = l+(r-l)/2;
+ 
+        // Sort first and second halves
+        merge_sort_tau(arr, l, m);
+        merge_sort_tau(arr, m+1, r);
+ 
+        merge_tau(arr, l, m, r);
+    }
+}
+
+// Merges two subarrays of arr[].
+// First subarray is arr[l..m]
+// Second subarray is arr[m+1..r]
+void merge_process_number(Process * arr[], int l, int m, int r){
+    int i, j, k;
+    int n1 = m - l + 1;
+    int n2 =  r - m;
+ 
+    /* create temp arrays */
+    Process * L[n1], * R[n2];
+ 
+    /* Copy data to temp arrays L[] and R[] */
+    for (i = 0; i < n1; i++)
+        L[i] = arr[l + i];
+    for (j = 0; j < n2; j++)
+        R[j] = arr[m + 1+ j];
+ 
+    /* Merge the temp arrays back into arr[l..r]*/
+    i = 0; // Initial index of first subarray
+    j = 0; // Initial index of second subarray
+    k = l; // Initial index of merged subarray
+    while (i < n1 && j < n2)
+    {
+        if (L[i]->number <= R[j]->number)
+        {
+            arr[k] = L[i];
+            i++;
+        }
+        else
+        {
+            arr[k] = R[j];
+            j++;
+        }
+        k++;
+    }
+ 
+    /* Copy the remaining elements of L[], if there
+       are any */
+    while (i < n1)
+    {
+        arr[k] = L[i];
+        i++;
+        k++;
+    }
+ 
+    /* Copy the remaining elements of R[], if there
+       are any */
+    while (j < n2)
+    {
+        arr[k] = R[j];
+        j++;
+        k++;
+    }
+}
+ 
+/* l is for left index and r is right index of the
+   sub-array of arr to be sorted */
+void merge_sort_process_number(Process * arr[], int l, int r){
+    if (l < r)
+    {
+        // Same as (l+r)/2, but avoids overflow for
+        // large l and h
+        int m = l+(r-l)/2;
+ 
+        // Sort first and second halves
+        merge_sort_process_number(arr, l, m);
+        merge_sort_process_number(arr, m+1, r);
+ 
+        merge_process_number(arr, l, m, r);
+    }
+}
